@@ -13,16 +13,24 @@ export default function Home() {
   const [address, setAddress] = useState("");
 
   const createJob = async () => {
+    const now = new Date();
+    const end = new Date(now.getTime() + 60 * 60 * 1000);
+
     const { error } = await supabase.from("jobs").insert([
       {
         customer_name: name,
         address: address,
-        date: new Date().toISOString().split("T")[0]
+        start_at: now.toISOString(),
+        end_at: end.toISOString(),
+        assigned_to: "Nicky",
+        status: "open",
+        job_type: "your_job",
+        event_color: "blue"
       }
     ]);
 
     if (error) {
-      alert("Error creating job");
+      alert(`Error creating job: ${error.message}`);
     } else {
       alert("Job saved!");
       setName("");
