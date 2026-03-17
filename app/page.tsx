@@ -16,6 +16,8 @@ type Job = {
   service_description: string | null;
   job_date: string | null;
   start_at: string | null;
+  price: number | null;
+  status: string | null;
   created_at: string;
 };
 
@@ -49,6 +51,15 @@ const timeOptions = [
   "20:00"
 ];
 
+const statusOptions = [
+  "open",
+  "scheduled",
+  "completed",
+  "canceled",
+  "follow up",
+  "pick up"
+];
+
 function formatTimeLabel(time: string) {
   const [hourStr, minute] = time.split(":");
   const hour = Number(hourStr);
@@ -72,6 +83,8 @@ export default function Home() {
   const [service, setService] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [price, setPrice] = useState("");
+  const [status, setStatus] = useState("open");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -79,7 +92,7 @@ export default function Home() {
     const { data, error } = await supabase
       .from("jobs")
       .select(
-        "id, customer_name, phone, address, service_description, job_date, start_at, created_at"
+        "id, customer_name, phone, address, service_description, job_date, start_at, price, status, created_at"
       )
       .order("created_at", { ascending: false });
 
@@ -114,8 +127,9 @@ export default function Home() {
         job_date: selectedDate,
         start_at: startDate.toISOString(),
         end_at: endDate.toISOString(),
+        price: price ? Number(price) : null,
+        status,
         assigned_to: "Nicky",
-        status: "open",
         job_type: "your_job",
         event_color: "blue"
       }
@@ -135,6 +149,8 @@ export default function Home() {
     setService("");
     setDate("");
     setTime("");
+    setPrice("");
+    setStatus("open");
     loadJobs();
   };
 
@@ -211,6 +227,30 @@ export default function Home() {
 
         <br />
 
+        <input
+          type="number"
+          placeholder="Price"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          style={{ width: 320, padding: 10, marginBottom: 12 }}
+        />
+
+        <br />
+
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          style={{ width: 344, padding: 10, marginBottom: 12 }}
+        >
+          {statusOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+
+        <br />
+
         <button
           onClick={createJob}
           disabled={loading}
@@ -247,6 +287,8 @@ export default function Home() {
                 <div>{job.service_description || "No service"}</div>
                 <div>{job.job_date || "No date"}</div>
                 <div>{formatSavedTime(job.start_at)}</div>
+                <div>{job.price != null ? `$${job.price}` : "No price"}</div>
+                <div>Status: {job.status || "open"}</div>
                 <small>Created: {new Date(job.created_at).toLocaleString()}</small>
               </div>
             ))}
