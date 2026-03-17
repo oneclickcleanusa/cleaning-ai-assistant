@@ -27,9 +27,7 @@ export default function Home() {
       .select("id, customer_name, address, created_at")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setJobs(data);
-    }
+    if (!error && data) setJobs(data);
   };
 
   useEffect(() => {
@@ -50,7 +48,7 @@ export default function Home() {
     const { error } = await supabase.from("jobs").insert([
       {
         customer_name: name,
-        address: address,
+        address,
         start_at: now.toISOString(),
         end_at: end.toISOString(),
         assigned_to: "Nicky",
@@ -64,12 +62,13 @@ export default function Home() {
 
     if (error) {
       alert(`Error creating job: ${error.message}`);
-    } else {
-      alert("Job saved!");
-      setName("");
-      setAddress("");
-      loadJobs();
+      return;
     }
+
+    alert("Job saved!");
+    setName("");
+    setAddress("");
+    loadJobs();
   };
 
   return (
@@ -128,6 +127,4 @@ export default function Home() {
       </div>
     </div>
   );
-}      setAddress("");
-    }
-  };
+}
