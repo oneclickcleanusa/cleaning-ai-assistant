@@ -15,6 +15,7 @@ type Job = {
   address: string | null;
   service_description: string | null;
   job_date: string | null;
+  start_at: string | null;
   created_at: string;
 };
 
@@ -56,6 +57,14 @@ function formatTimeLabel(time: string) {
   return `${displayHour}:${minute} ${suffix}`;
 }
 
+function formatSavedTime(isoString: string | null) {
+  if (!isoString) return "No time";
+  return new Date(isoString).toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
 export default function Home() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -70,7 +79,7 @@ export default function Home() {
     const { data, error } = await supabase
       .from("jobs")
       .select(
-        "id, customer_name, phone, address, service_description, job_date, created_at"
+        "id, customer_name, phone, address, service_description, job_date, start_at, created_at"
       )
       .order("created_at", { ascending: false });
 
@@ -237,7 +246,8 @@ export default function Home() {
                 <div>{job.address || "No address"}</div>
                 <div>{job.service_description || "No service"}</div>
                 <div>{job.job_date || "No date"}</div>
-                <small>{new Date(job.created_at).toLocaleString()}</small>
+                <div>{formatSavedTime(job.start_at)}</div>
+                <small>Created: {new Date(job.created_at).toLocaleString()}</small>
               </div>
             ))}
           </div>
