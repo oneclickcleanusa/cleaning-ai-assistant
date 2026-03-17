@@ -32,6 +32,30 @@ const serviceOptions = [
   "Other"
 ];
 
+const timeOptions = [
+  "08:00",
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+  "18:00",
+  "19:00",
+  "20:00"
+];
+
+function formatTimeLabel(time: string) {
+  const [hourStr, minute] = time.split(":");
+  const hour = Number(hourStr);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:${minute} ${suffix}`;
+}
+
 export default function Home() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -163,15 +187,18 @@ export default function Home() {
 
         <br />
 
-        <input
-  type="time"
-  value={time}
-  min="00:00"
-  max="23:59"
-  step="900"
-  onChange={(e) => setTime(e.target.value)}
-  style={{ width: 320, padding: 10, marginBottom: 12 }}
-/>
+        <select
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          style={{ width: 344, padding: 10, marginBottom: 12 }}
+        >
+          <option value="">Select Time</option>
+          {timeOptions.map((option) => (
+            <option key={option} value={option}>
+              {formatTimeLabel(option)}
+            </option>
+          ))}
+        </select>
 
         <br />
 
