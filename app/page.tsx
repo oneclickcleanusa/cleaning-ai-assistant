@@ -131,30 +131,3 @@ export default function Home() {
 }      setAddress("");
     }
   };
-
-  return (
-    <div style={{ padding: 40 }}>
-      <h1>Cleaning AI Assistant</h1>
-
-      <h3>Create Job</h3>
-
-      <input
-        placeholder="Customer Name"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-
-      <br /><br />
-
-      <input
-        placeholder="Address"
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-      />
-
-      <br /><br />
-
-      <button onClick={createJob}>Create Job</button>
-    </div>
-  );
-}
