@@ -14,6 +14,7 @@ type Job = {
   phone: string | null;
   address: string | null;
   service_description: string | null;
+  job_date: string | null;
   created_at: string;
 };
 
@@ -22,16 +23,21 @@ export default function Home() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [service, setService] = useState("");
+  const [date, setDate] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadJobs = async () => {
     const { data, error } = await supabase
       .from("jobs")
-      .select("id, customer_name, phone, address, service_description, created_at")
+      .select(
+        "id, customer_name, phone, address, service_description, job_date, created_at"
+      )
       .order("created_at", { ascending: false });
 
-    if (!error && data) setJobs(data);
+    if (!error && data) {
+      setJobs(data);
+    }
   };
 
   useEffect(() => {
@@ -44,10 +50,11 @@ export default function Home() {
       return;
     }
 
-    setLoading(true);
+    const selectedDate = date || new Date().toISOString().split("T")[0];
+    const startDate = new Date(`${selectedDate}T09:00:00`);
+    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
 
-    const now = new Date();
-    const end = new Date(now.getTime() + 60 * 60 * 1000);
+    setLoading(true);
 
     const { error } = await supabase.from("jobs").insert([
       {
@@ -55,8 +62,9 @@ export default function Home() {
         phone,
         address,
         service_description: service,
-        start_at: now.toISOString(),
-        end_at: end.toISOString(),
+        job_date: selectedDate,
+        start_at: startDate.toISOString(),
+        end_at: endDate.toISOString(),
         assigned_to: "Nicky",
         status: "open",
         job_type: "your_job",
@@ -76,11 +84,12 @@ export default function Home() {
     setPhone("");
     setAddress("");
     setService("");
+    setDate("");
     loadJobs();
   };
 
   return (
-    <div style={{ padding: 40, maxWidth: 900 }}>
+    <div style={{ padding: 40, maxWidth: 900, fontFamily: "Arial, sans-serif" }}>
       <h1>Cleaning AI Assistant</h1>
 
       <div style={{ marginTop: 30, marginBottom: 40 }}>
@@ -90,7 +99,7 @@ export default function Home() {
           placeholder="Customer Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          style={{ width: 300, padding: 10, marginBottom: 12 }}
+          style={{ width: 320, padding: 10, marginBottom: 12 }}
         />
 
         <br />
@@ -99,7 +108,7 @@ export default function Home() {
           placeholder="Phone"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          style={{ width: 300, padding: 10, marginBottom: 12 }}
+          style={{ width: 320, padding: 10, marginBottom: 12 }}
         />
 
         <br />
@@ -108,7 +117,7 @@ export default function Home() {
           placeholder="Address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
-          style={{ width: 300, padding: 10, marginBottom: 12 }}
+          style={{ width: 320, padding: 10, marginBottom: 12 }}
         />
 
         <br />
@@ -117,12 +126,30 @@ export default function Home() {
           placeholder="Service"
           value={service}
           onChange={(e) => setService(e.target.value)}
-          style={{ width: 300, padding: 10, marginBottom: 12 }}
+          style={{ width: 320, padding: 10, marginBottom: 12 }}
         />
 
         <br />
 
-        <button onClick={createJob} disabled={loading} style={{ padding: "10px 16px" }}>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={{ width: 320, padding: 10, marginBottom: 12 }}
+        />
+
+        <br />
+
+        <button
+          onClick={createJob}
+          disabled={loading}
+          style={{
+            padding: "10px 16px",
+            cursor: "pointer",
+            borderRadius: 6,
+            border: "1px solid #ccc"
+          }}
+        >
           {loading ? "Saving..." : "Create Job"}
         </button>
       </div>
@@ -147,6 +174,7 @@ export default function Home() {
                 <div>{job.phone || "No phone"}</div>
                 <div>{job.address || "No address"}</div>
                 <div>{job.service_description || "No service"}</div>
+                <div>{job.job_date || "No date"}</div>
                 <small>{new Date(job.created_at).toLocaleString()}</small>
               </div>
             ))}
