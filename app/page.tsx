@@ -11,20 +11,24 @@ const supabase = createClient(
 type Job = {
   id: string;
   customer_name: string;
+  phone: string | null;
   address: string | null;
+  service_description: string | null;
   created_at: string;
 };
 
 export default function Home() {
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [service, setService] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
 
   const loadJobs = async () => {
     const { data, error } = await supabase
       .from("jobs")
-      .select("id, customer_name, address, created_at")
+      .select("id, customer_name, phone, address, service_description, created_at")
       .order("created_at", { ascending: false });
 
     if (!error && data) setJobs(data);
@@ -48,7 +52,9 @@ export default function Home() {
     const { error } = await supabase.from("jobs").insert([
       {
         customer_name: name,
+        phone,
         address,
+        service_description: service,
         start_at: now.toISOString(),
         end_at: end.toISOString(),
         assigned_to: "Nicky",
@@ -67,7 +73,9 @@ export default function Home() {
 
     alert("Job saved!");
     setName("");
+    setPhone("");
     setAddress("");
+    setService("");
     loadJobs();
   };
 
@@ -88,9 +96,27 @@ export default function Home() {
         <br />
 
         <input
+          placeholder="Phone"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          style={{ width: 300, padding: 10, marginBottom: 12 }}
+        />
+
+        <br />
+
+        <input
           placeholder="Address"
           value={address}
           onChange={(e) => setAddress(e.target.value)}
+          style={{ width: 300, padding: 10, marginBottom: 12 }}
+        />
+
+        <br />
+
+        <input
+          placeholder="Service"
+          value={service}
+          onChange={(e) => setService(e.target.value)}
           style={{ width: 300, padding: 10, marginBottom: 12 }}
         />
 
@@ -118,7 +144,9 @@ export default function Home() {
                 }}
               >
                 <strong>{job.customer_name}</strong>
+                <div>{job.phone || "No phone"}</div>
                 <div>{job.address || "No address"}</div>
+                <div>{job.service_description || "No service"}</div>
                 <small>{new Date(job.created_at).toLocaleString()}</small>
               </div>
             ))}
