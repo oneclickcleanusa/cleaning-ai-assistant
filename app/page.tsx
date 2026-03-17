@@ -164,11 +164,14 @@ export default function Home() {
         <br />
 
         <input
-          type="time"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          style={{ width: 320, padding: 10, marginBottom: 12 }}
-        />
+  type="time"
+  value={time}
+  min="00:00"
+  max="23:59"
+  step="900"
+  onChange={(e) => setTime(e.target.value)}
+  style={{ width: 320, padding: 10, marginBottom: 12 }}
+/>
 
         <br />
 
