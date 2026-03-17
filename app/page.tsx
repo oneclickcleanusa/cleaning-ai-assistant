@@ -18,12 +18,27 @@ type Job = {
   created_at: string;
 };
 
+const serviceOptions = [
+  "Carpet Cleaning",
+  "Upholstery Cleaning",
+  "Sofa Cleaning",
+  "Sectional Cleaning",
+  "Mattress Cleaning",
+  "Area Rug Cleaning",
+  "Rug Pickup",
+  "Water Damage",
+  "Air Duct Cleaning",
+  "Dryer Vent Cleaning",
+  "Other"
+];
+
 export default function Home() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [service, setService] = useState("");
   const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -51,7 +66,8 @@ export default function Home() {
     }
 
     const selectedDate = date || new Date().toISOString().split("T")[0];
-    const startDate = new Date(`${selectedDate}T09:00:00`);
+    const selectedTime = time || "09:00";
+    const startDate = new Date(`${selectedDate}T${selectedTime}:00`);
     const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
 
     setLoading(true);
@@ -85,6 +101,7 @@ export default function Home() {
     setAddress("");
     setService("");
     setDate("");
+    setTime("");
     loadJobs();
   };
 
@@ -122,12 +139,18 @@ export default function Home() {
 
         <br />
 
-        <input
-          placeholder="Service"
+        <select
           value={service}
           onChange={(e) => setService(e.target.value)}
-          style={{ width: 320, padding: 10, marginBottom: 12 }}
-        />
+          style={{ width: 344, padding: 10, marginBottom: 12 }}
+        >
+          <option value="">Select Service</option>
+          {serviceOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
 
         <br />
 
@@ -135,6 +158,15 @@ export default function Home() {
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
+          style={{ width: 320, padding: 10, marginBottom: 12 }}
+        />
+
+        <br />
+
+        <input
+          type="time"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
           style={{ width: 320, padding: 10, marginBottom: 12 }}
         />
 
