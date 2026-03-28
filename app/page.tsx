@@ -119,16 +119,31 @@ export default function Home() {
       event_color: "blue"
     };
 
-    const { error } = await supabase.from("jobs").insert([newJob]);
+const { error } = await supabase.from("jobs").insert([newJob]);
 
-    setLoading(false);
+if (error) {
+  setLoading(false);
+  alert(error.message);
+  return;
+}
 
-    if (error) {
-      alert(error.message);
-      return;
-    }
+const calendarRes = await fetch("/api/create-calendar-event", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify(newJob)
+});
 
-    alert("Job saved!");
+const calendarData = await calendarRes.json();
+
+setLoading(false);
+
+if (!calendarRes.ok) {
+  alert(`Job saved, but calendar failed: ${calendarData.error}`);
+} else {
+  alert("Job saved and added to Google Calendar!");
+}
 
     setName("");
     setPhone("");
