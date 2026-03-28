@@ -21,7 +21,7 @@ type Job = {
   created_at: string;
 };
 
-const serviceOptions = [
+const services = [
   "Carpet Cleaning",
   "Upholstery Cleaning",
   "Sofa Cleaning",
@@ -35,23 +35,12 @@ const serviceOptions = [
   "Other"
 ];
 
-const timeOptions = [
-  "08:00",
-  "09:00",
-  "10:00",
-  "11:00",
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-  "17:00",
-  "18:00",
-  "19:00",
-  "20:00"
+const times = [
+  "08:00","09:00","10:00","11:00","12:00",
+  "13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"
 ];
 
-const statusOptions = [
+const statuses = [
   "open",
   "scheduled",
   "completed",
@@ -60,17 +49,17 @@ const statusOptions = [
   "pick up"
 ];
 
-function formatTimeLabel(time: string) {
-  const [hourStr, minute] = time.split(":");
-  const hour = Number(hourStr);
+function formatTime(t: string) {
+  const [h, m] = t.split(":");
+  const hour = Number(h);
   const suffix = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-  return `${displayHour}:${minute} ${suffix}`;
+  const display = hour % 12 === 0 ? 12 : hour % 12;
+  return `${display}:${m} ${suffix}`;
 }
 
-function formatSavedTime(isoString: string | null) {
-  if (!isoString) return "No time";
-  return new Date(isoString).toLocaleTimeString([], {
+function formatSavedTime(t: string | null) {
+  if (!t) return "No time";
+  return new Date(t).toLocaleTimeString([], {
     hour: "numeric",
     minute: "2-digit"
   });
@@ -91,14 +80,10 @@ export default function Home() {
   const loadJobs = async () => {
     const { data, error } = await supabase
       .from("jobs")
-      .select(
-        "id, customer_name, phone, address, service_description, job_date, start_at, price, status, created_at"
-      )
+      .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setJobs(data);
-    }
+    if (!error && data) setJobs(data);
   };
 
   useEffect(() => {
@@ -107,42 +92,44 @@ export default function Home() {
 
   const createJob = async () => {
     if (!name.trim()) {
-      alert("Please enter customer name");
+      alert("Enter customer name");
       return;
     }
 
     const selectedDate = date || new Date().toISOString().split("T")[0];
     const selectedTime = time || "09:00";
-    const startDate = new Date(`${selectedDate}T${selectedTime}:00`);
-    const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+
+    const start = new Date(`${selectedDate}T${selectedTime}:00`);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
 
     setLoading(true);
 
-    const { error } = await supabase.from("jobs").insert([
-      {
-        customer_name: name,
-        phone,
-        address,
-        service_description: service,
-        job_date: selectedDate,
-        start_at: startDate.toISOString(),
-        end_at: endDate.toISOString(),
-        price: price ? Number(price) : null,
-        status,
-        assigned_to: "Nicky",
-        job_type: "your_job",
-        event_color: "blue"
-      }
-    ]);
+    const newJob = {
+      customer_name: name,
+      phone,
+      address,
+      service_description: service,
+      job_date: selectedDate,
+      start_at: start.toISOString(),
+      end_at: end.toISOString(),
+      price: price ? Number(price) : null,
+      status,
+      assigned_to: "Nicky",
+      job_type: "cleaning",
+      event_color: "blue"
+    };
+
+    const { error } = await supabase.from("jobs").insert([newJob]);
 
     setLoading(false);
 
     if (error) {
-      alert(`Error creating job: ${error.message}`);
+      alert(error.message);
       return;
     }
 
     alert("Job saved!");
+
     setName("");
     setPhone("");
     setAddress("");
@@ -151,150 +138,100 @@ export default function Home() {
     setTime("");
     setPrice("");
     setStatus("open");
+
     loadJobs();
   };
 
   return (
-    <div style={{ padding: 40, maxWidth: 900, fontFamily: "Arial, sans-serif" }}>
+    <div style={{ padding: 40, maxWidth: 900, fontFamily: "Arial" }}>
       <h1>Cleaning AI Assistant</h1>
 
-      <div style={{ marginTop: 30, marginBottom: 40 }}>
-        <h2>Create Job</h2>
+      {/* GOOGLE CONNECT */}
+      <button
+        onClick={() => (window.location.href = "/api/google-auth")}
+        style={{ marginBottom: 20 }}
+      >
+        Connect Google Calendar
+      </button>
 
-        <input
-          placeholder="Customer Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={{ width: 320, padding: 10, marginBottom: 12 }}
-        />
+      <h2>Create Job</h2>
 
-        <br />
+      <input
+        placeholder="Customer Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      /><br /><br />
 
-        <input
-          placeholder="Phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          style={{ width: 320, padding: 10, marginBottom: 12 }}
-        />
+      <input
+        placeholder="Phone"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+      /><br /><br />
 
-        <br />
+      <input
+        placeholder="Address"
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+      /><br /><br />
 
-        <input
-          placeholder="Address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          style={{ width: 320, padding: 10, marginBottom: 12 }}
-        />
+      <select value={service} onChange={(e) => setService(e.target.value)}>
+        <option value="">Select Service</option>
+        {services.map((s) => (
+          <option key={s}>{s}</option>
+        ))}
+      </select><br /><br />
 
-        <br />
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      <br /><br />
 
-        <select
-          value={service}
-          onChange={(e) => setService(e.target.value)}
-          style={{ width: 344, padding: 10, marginBottom: 12 }}
-        >
-          <option value="">Select Service</option>
-          {serviceOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
+      <select value={time} onChange={(e) => setTime(e.target.value)}>
+        <option value="">Select Time</option>
+        {times.map((t) => (
+          <option key={t} value={t}>{formatTime(t)}</option>
+        ))}
+      </select><br /><br />
+
+      <input
+        type="number"
+        placeholder="Price"
+        value={price}
+        onChange={(e) => setPrice(e.target.value)}
+      /><br /><br />
+
+      <select value={status} onChange={(e) => setStatus(e.target.value)}>
+        {statuses.map((s) => (
+          <option key={s}>{s}</option>
+        ))}
+      </select><br /><br />
+
+      <button onClick={createJob} disabled={loading}>
+        {loading ? "Saving..." : "Create Job"}
+      </button>
+
+      <h2 style={{ marginTop: 40 }}>Saved Jobs</h2>
+
+      {jobs.length === 0 ? (
+        <p>No jobs yet</p>
+      ) : (
+        <div style={{ display: "grid", gap: 10 }}>
+          {jobs.map((job) => (
+            <div
+              key={job.id}
+              style={{ border: "1px solid #ccc", padding: 10 }}
+            >
+              <strong>{job.customer_name}</strong>
+              <div>{job.phone}</div>
+              <div>{job.address}</div>
+              <div>{job.service_description}</div>
+              <div>{job.job_date}</div>
+              <div>{formatSavedTime(job.start_at)}</div>
+              <div>{job.price ? `$${job.price}` : ""}</div>
+              <div>Status: {job.status}</div>
+              <small>{new Date(job.created_at).toLocaleString()}</small>
+            </div>
           ))}
-        </select>
-
-        <br />
-
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={{ width: 320, padding: 10, marginBottom: 12 }}
-        />
-
-        <br />
-
-        <select
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          style={{ width: 344, padding: 10, marginBottom: 12 }}
-        >
-          <option value="">Select Time</option>
-          {timeOptions.map((option) => (
-            <option key={option} value={option}>
-              {formatTimeLabel(option)}
-            </option>
-          ))}
-        </select>
-
-        <br />
-
-        <input
-          type="number"
-          placeholder="Price"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          style={{ width: 320, padding: 10, marginBottom: 12 }}
-        />
-
-        <br />
-
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          style={{ width: 344, padding: 10, marginBottom: 12 }}
-        >
-          {statusOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-
-        <br />
-
-        <button
-          onClick={createJob}
-          disabled={loading}
-          style={{
-            padding: "10px 16px",
-            cursor: "pointer",
-            borderRadius: 6,
-            border: "1px solid #ccc"
-          }}
-        >
-          {loading ? "Saving..." : "Create Job"}
-        </button>
-      </div>
-
-      <div>
-        <h2>Saved Jobs</h2>
-
-        {jobs.length === 0 ? (
-          <p>No jobs yet.</p>
-        ) : (
-          <div style={{ display: "grid", gap: 12 }}>
-            {jobs.map((job) => (
-              <div
-                key={job.id}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: 8,
-                  padding: 16
-                }}
-              >
-                <strong>{job.customer_name}</strong>
-                <div>{job.phone || "No phone"}</div>
-                <div>{job.address || "No address"}</div>
-                <div>{job.service_description || "No service"}</div>
-                <div>{job.job_date || "No date"}</div>
-                <div>{formatSavedTime(job.start_at)}</div>
-                <div>{job.price != null ? `$${job.price}` : "No price"}</div>
-                <div>Status: {job.status || "open"}</div>
-                <small>Created: {new Date(job.created_at).toLocaleString()}</small>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
