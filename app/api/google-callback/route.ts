@@ -1,19 +1,32 @@
 import { google } from "googleapis";
 
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const code = url.searchParams.get("code");
+  try {
+    const url = new URL(req.url);
+    const code = url.searchParams.get("code");
 
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    `${process.env.NEXT_PUBLIC_APP_URL}/api/google-callback`
-  );
+    if (!code) {
+      return new Response("Missing code", { status: 400 });
+    }
 
-  const { tokens } = await oauth2Client.getToken(code!);
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      `${process.env.NEXT_PUBLIC_APP_URL}/api/google-callback`
+    );
 
-  return new Response(
-    JSON.stringify(tokens),
-    { headers: { "Content-Type": "application/json" } }
-  );
+    const { tokens } = await oauth2Client.getToken(code);
+
+    return new Response(
+      JSON.stringify(tokens, null, 2),
+      {
+        headers: { "Content-Type": "application/json" }
+      }
+    );
+  } catch (error: any) {
+    return new Response(
+      `Google callback error: ${error.message}`,
+      { status: 500 }
+    );
+  }
 }
