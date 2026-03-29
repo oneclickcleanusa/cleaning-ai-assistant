@@ -36,8 +36,19 @@ const services = [
 ];
 
 const times = [
-  "08:00","09:00","10:00","11:00","12:00",
-  "13:00","14:00","15:00","16:00","17:00","18:00","19:00","20:00"
+  "08:00",
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+  "18:00",
+  "19:00",
+  "20:00"
 ];
 
 const statuses = [
@@ -83,7 +94,9 @@ export default function Home() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) setJobs(data);
+    if (!error && data) {
+      setJobs(data);
+    }
   };
 
   useEffect(() => {
@@ -119,43 +132,43 @@ export default function Home() {
       event_color: "blue"
     };
 
-const { error } = await supabase.from("jobs").insert([newJob]);
+    const { error } = await supabase.from("jobs").insert([newJob]);
 
-if (error) {
-  setLoading(false);
-  alert(error.message);
-  return;
-}
+    if (error) {
+      setLoading(false);
+      alert(`Job save failed: ${error.message}`);
+      return;
+    }
 
-try {
-  const calendarRes = await fetch("/api/create-calendar-event", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(newJob)
-  });
+    try {
+      const calendarRes = await fetch("/api/create-calendar-event", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newJob)
+      });
 
-  const text = await calendarRes.text();
-  let calendarData: any = {};
+      const text = await calendarRes.text();
+      let calendarData: any = {};
 
-  try {
-    calendarData = JSON.parse(text);
-  } catch {
-    calendarData = { error: text || "Unknown server response" };
-  }
+      try {
+        calendarData = JSON.parse(text);
+      } catch {
+        calendarData = { error: text || "Unknown server response" };
+      }
 
-  setLoading(false);
+      setLoading(false);
 
-  if (!calendarRes.ok) {
-    alert(`Job saved, but calendar failed: ${calendarData.error || "Unknown error"}`);
-  } else {
-    alert("Job saved and added to Google Calendar!");
-  }
-} catch (err: any) {
-  setLoading(false);
-  alert(`Calendar request failed: ${err.message}`);
-}
+      if (!calendarRes.ok) {
+        alert(`Job saved, but calendar failed: ${calendarData.error || "Unknown error"}`);
+      } else {
+        alert("Job saved and added to Google Calendar!");
+      }
+    } catch (err: any) {
+      setLoading(false);
+      alert(`Calendar request failed: ${err.message}`);
+    }
 
     setName("");
     setPhone("");
@@ -173,9 +186,10 @@ try {
     <div style={{ padding: 40, maxWidth: 900, fontFamily: "Arial" }}>
       <h1>Cleaning AI Assistant</h1>
 
-      {/* GOOGLE CONNECT */}
       <button
-        onClick={() => (window.location.href = "/api/google-auth")}
+        onClick={() => {
+          window.location.href = "/api/google-auth";
+        }}
         style={{ marginBottom: 20 }}
       >
         Connect Google Calendar
@@ -187,49 +201,74 @@ try {
         placeholder="Customer Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-      /><br /><br />
+      />
+      <br />
+      <br />
 
       <input
         placeholder="Phone"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-      /><br /><br />
+      />
+      <br />
+      <br />
 
       <input
         placeholder="Address"
         value={address}
         onChange={(e) => setAddress(e.target.value)}
-      /><br /><br />
+      />
+      <br />
+      <br />
 
       <select value={service} onChange={(e) => setService(e.target.value)}>
         <option value="">Select Service</option>
         {services.map((s) => (
-          <option key={s}>{s}</option>
+          <option key={s} value={s}>
+            {s}
+          </option>
         ))}
-      </select><br /><br />
+      </select>
+      <br />
+      <br />
 
-      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-      <br /><br />
+      <input
+        type="date"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
+      />
+      <br />
+      <br />
 
       <select value={time} onChange={(e) => setTime(e.target.value)}>
         <option value="">Select Time</option>
         {times.map((t) => (
-          <option key={t} value={t}>{formatTime(t)}</option>
+          <option key={t} value={t}>
+            {formatTime(t)}
+          </option>
         ))}
-      </select><br /><br />
+      </select>
+      <br />
+      <br />
 
       <input
         type="number"
         placeholder="Price"
         value={price}
         onChange={(e) => setPrice(e.target.value)}
-      /><br /><br />
+      />
+      <br />
+      <br />
 
       <select value={status} onChange={(e) => setStatus(e.target.value)}>
         {statuses.map((s) => (
-          <option key={s}>{s}</option>
+          <option key={s} value={s}>
+            {s}
+          </option>
         ))}
-      </select><br /><br />
+      </select>
+      <br />
+      <br />
 
       <button onClick={createJob} disabled={loading}>
         {loading ? "Saving..." : "Create Job"}
@@ -247,13 +286,13 @@ try {
               style={{ border: "1px solid #ccc", padding: 10 }}
             >
               <strong>{job.customer_name}</strong>
-              <div>{job.phone}</div>
-              <div>{job.address}</div>
-              <div>{job.service_description}</div>
-              <div>{job.job_date}</div>
+              <div>{job.phone || "No phone"}</div>
+              <div>{job.address || "No address"}</div>
+              <div>{job.service_description || "No service"}</div>
+              <div>{job.job_date || "No date"}</div>
               <div>{formatSavedTime(job.start_at)}</div>
-              <div>{job.price ? `$${job.price}` : ""}</div>
-              <div>Status: {job.status}</div>
+              <div>{job.price != null ? `$${job.price}` : "No price"}</div>
+              <div>Status: {job.status || "open"}</div>
               <small>{new Date(job.created_at).toLocaleString()}</small>
             </div>
           ))}
