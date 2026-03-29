@@ -89,13 +89,22 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   const loadJobs = async () => {
-    const { data, error } = await supabase
-      .from("jobs")
-      .select("*")
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setJobs(data);
+      if (error) {
+        console.error("Load jobs error:", error.message);
+        return;
+      }
+
+      if (data) {
+        setJobs(data);
+      }
+    } catch (err: any) {
+      console.error("Load jobs fetch failed:", err.message);
     }
   };
 
@@ -115,8 +124,6 @@ export default function Home() {
     const start = new Date(`${selectedDate}T${selectedTime}:00`);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
 
-    setLoading(true);
-
     const newJob = {
       customer_name: name,
       phone,
@@ -132,11 +139,19 @@ export default function Home() {
       event_color: "blue"
     };
 
-    const { error } = await supabase.from("jobs").insert([newJob]);
+    setLoading(true);
 
-    if (error) {
+    try {
+      const { error } = await supabase.from("jobs").insert([newJob]);
+
+      if (error) {
+        setLoading(false);
+        alert(`Job save failed: ${error.message}`);
+        return;
+      }
+    } catch (err: any) {
       setLoading(false);
-      alert(`Job save failed: ${error.message}`);
+      alert(`Supabase request failed: ${err.message}`);
       return;
     }
 
@@ -168,6 +183,7 @@ export default function Home() {
     } catch (err: any) {
       setLoading(false);
       alert(`Calendar request failed: ${err.message}`);
+      return;
     }
 
     setName("");
