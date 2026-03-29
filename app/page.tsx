@@ -127,22 +127,34 @@ if (error) {
   return;
 }
 
-const calendarRes = await fetch("/api/create-calendar-event", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify(newJob)
-});
+try {
+  const calendarRes = await fetch("/api/create-calendar-event", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(newJob)
+  });
 
-const calendarData = await calendarRes.json();
+  const text = await calendarRes.text();
+  let calendarData: any = {};
 
-setLoading(false);
+  try {
+    calendarData = JSON.parse(text);
+  } catch {
+    calendarData = { error: text || "Unknown server response" };
+  }
 
-if (!calendarRes.ok) {
-  alert(`Job saved, but calendar failed: ${calendarData.error}`);
-} else {
-  alert("Job saved and added to Google Calendar!");
+  setLoading(false);
+
+  if (!calendarRes.ok) {
+    alert(`Job saved, but calendar failed: ${calendarData.error || "Unknown error"}`);
+  } else {
+    alert("Job saved and added to Google Calendar!");
+  }
+} catch (err: any) {
+  setLoading(false);
+  alert(`Calendar request failed: ${err.message}`);
 }
 
     setName("");
