@@ -96,7 +96,7 @@ export default function Home() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Load jobs error:", error.message);
+        alert(`Load jobs failed: ${error.message}`);
         return;
       }
 
@@ -104,7 +104,7 @@ export default function Home() {
         setJobs(data);
       }
     } catch (err: any) {
-      console.error("Load jobs fetch failed:", err.message);
+      alert(`Load jobs request failed: ${err.message}`);
     }
   };
 
@@ -149,53 +149,24 @@ export default function Home() {
         alert(`Job save failed: ${error.message}`);
         return;
       }
+
+      setLoading(false);
+      alert("Job saved!");
+
+      setName("");
+      setPhone("");
+      setAddress("");
+      setService("");
+      setDate("");
+      setTime("");
+      setPrice("");
+      setStatus("open");
+
+      loadJobs();
     } catch (err: any) {
       setLoading(false);
       alert(`Supabase request failed: ${err.message}`);
-      return;
     }
-
-    try {
-      const calendarRes = await fetch("/api/create-calendar-event", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(newJob)
-      });
-
-      const text = await calendarRes.text();
-      let calendarData: any = {};
-
-      try {
-        calendarData = JSON.parse(text);
-      } catch {
-        calendarData = { error: text || "Unknown server response" };
-      }
-
-      setLoading(false);
-
-      if (!calendarRes.ok) {
-        alert(`Job saved, but calendar failed: ${calendarData.error || "Unknown error"}`);
-      } else {
-        alert("Job saved and added to Google Calendar!");
-      }
-    } catch (err: any) {
-      setLoading(false);
-      alert(`Calendar request failed: ${err.message}`);
-      return;
-    }
-
-    setName("");
-    setPhone("");
-    setAddress("");
-    setService("");
-    setDate("");
-    setTime("");
-    setPrice("");
-    setStatus("open");
-
-    loadJobs();
   };
 
   return (
