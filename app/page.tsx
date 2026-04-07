@@ -135,7 +135,7 @@ export default function Home() {
       price: price ? Number(price) : null,
       status,
       assigned_to: "Nicky",
-      job_type: "cleaning",
+      job_type: "your_job",
       event_color: "blue"
     };
 
