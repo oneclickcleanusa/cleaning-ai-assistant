@@ -100,9 +100,7 @@ export default function Home() {
         return;
       }
 
-      if (data) {
-        setJobs(data);
-      }
+      setJobs(data || []);
     } catch (err: any) {
       alert(`Load jobs request failed: ${err.message}`);
     }
@@ -120,7 +118,6 @@ export default function Home() {
 
     const selectedDate = date || new Date().toISOString().split("T")[0];
     const selectedTime = time || "09:00";
-
     const start = new Date(`${selectedDate}T${selectedTime}:00`);
     const end = new Date(start.getTime() + 60 * 60 * 1000);
 
@@ -172,15 +169,6 @@ export default function Home() {
   return (
     <div style={{ padding: 40, maxWidth: 900, fontFamily: "Arial" }}>
       <h1>Cleaning AI Assistant</h1>
-
-      <button
-        onClick={() => {
-          window.location.href = "/api/google-auth";
-        }}
-        style={{ marginBottom: 20 }}
-      >
-        Connect Google Calendar
-      </button>
 
       <h2>Create Job</h2>
 
@@ -268,10 +256,7 @@ export default function Home() {
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
           {jobs.map((job) => (
-            <div
-              key={job.id}
-              style={{ border: "1px solid #ccc", padding: 10 }}
-            >
+            <div key={job.id} style={{ border: "1px solid #ccc", padding: 10 }}>
               <strong>{job.customer_name}</strong>
               <div>{job.phone || "No phone"}</div>
               <div>{job.address || "No address"}</div>
