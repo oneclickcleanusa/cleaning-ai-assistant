@@ -1,42 +1,66 @@
-"use client";
+const createJob = async () => {
+  if (!name.trim()) {
+    alert("Enter customer name");
+    return;
+  }
 
-import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+  const selectedDate = date || new Date().toISOString().split("T")[0];
+  const selectedTime = time || "09:00";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const start = new Date(`${selectedDate}T${selectedTime}:00`);
+  const end = new Date(start.getTime() + 60 * 60 * 1000);
 
-const supabase = createClient(url, key);
+  setLoading(true);
 
-export default function Home() {
-  const [result, setResult] = useState("Not tested yet");
-
-  const runTest = async () => {
-    try {
-      const { data, error } = await supabase.from("jobs").select("id").limit(1);
-
-      if (error) {
-        setResult(`Supabase error: ${error.message}`);
-        return;
-      }
-
-      setResult(`Success. Rows returned: ${data?.length ?? 0}`);
-    } catch (err: any) {
-      setResult(`Fetch failed: ${err.message}`);
-    }
+  const newJob = {
+    customer_name: name,
+    phone,
+    address,
+    service_description: service,
+    job_date: selectedDate,
+    start_at: start.toISOString(),
+    end_at: end.toISOString(),
+    price: price ? Number(price) : null,
+    status,
+    assigned_to: "Nicky",
+    job_type: "cleaning",
+    event_color: "blue"
   };
 
-  return (
-    <div style={{ padding: 40, fontFamily: "Arial" }}>
-      <h1>Supabase Debug Test</h1>
-      <div style={{ marginBottom: 12 }}>
-        <strong>URL:</strong> {url || "missing"}
-      </div>
-      <div style={{ marginBottom: 12 }}>
-        <strong>Key starts with:</strong> {key ? key.slice(0, 20) : "missing"}
-      </div>
-      <button onClick={runTest}>Run Supabase Test</button>
-      <p style={{ marginTop: 20 }}>{result}</p>
-    </div>
-  );
-}
+  // ✅ 1. Save to Supabase FIRST
+  const { error } = await supabase.from("jobs").insert([newJob]);
+
+  if (error) {
+    setLoading(false);
+    alert("Database error: " + error.message);
+    return;
+  }
+
+  // ✅ 2. Try Google Calendar (but don’t break if it fails)
+  try {
+    await fetch("/api/create-calendar-event", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(newJob)
+    });
+  } catch (err) {
+    console.log("Google Calendar failed (safe to ignore)");
+  }
+
+  setLoading(false);
+
+  alert("✅ Job saved!");
+
+  setName("");
+  setPhone("");
+  setAddress("");
+  setService("");
+  setDate("");
+  setTime("");
+  setPrice("");
+  setStatus("open");
+
+  loadJobs();
+};
