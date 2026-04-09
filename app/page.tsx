@@ -148,19 +148,33 @@ export default function Home() {
       }
 
       try {
-        await fetch("/api/create-calendar-event", {
+        const res = await fetch("/api/create-calendar-event", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
           },
           body: JSON.stringify(newJob)
         });
-      } catch {
-        console.log("Google Calendar failed, but job was saved.");
+
+        const text = await res.text();
+        let data: any = {};
+
+        try {
+          data = JSON.parse(text);
+        } catch {
+          data = { error: text || "Unknown calendar response" };
+        }
+
+        if (!res.ok) {
+          alert(`Job saved, but calendar failed: ${data.error}`);
+        } else {
+          alert("Job saved and added to Google Calendar!");
+        }
+      } catch (err: any) {
+        alert(`Job saved, but calendar request failed: ${err.message}`);
       }
 
       setLoading(false);
-      alert("Job saved!");
 
       setName("");
       setPhone("");
